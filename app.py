@@ -64,7 +64,8 @@ if uploaded:
     pred_label = idx_to_label[pred_idx]
 
     # Display only prediction text (no graph)
-    st.subheader(f"Prediction: **{pred_label}** (confidence {conf:.2f}) ")
+    st.subheader(f"Prediction: **{pred_label}** ")
+
 
 
 
