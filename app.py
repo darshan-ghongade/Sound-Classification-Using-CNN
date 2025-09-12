@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import librosa, soundfile as sf
 import tensorflow as tf
+from audiorecorder import audiorecorder   # pip install streamlit-audiorecorder
 
 # ------------------ 1. Load model & label map ------------------
 MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
@@ -24,9 +25,6 @@ FIX_LEN   = int(DURATION * SR)
 mean = np.load("mel_mean.npy")
 std  = np.load("mel_std.npy")
 
-# mean = m   # <--- replace with your saved training mean
-# std  = s   # <--- replace with your saved training std
-
 # ------------------ 2. Preprocessing ------------------
 def wav_to_logmel(path):
     y, sr = librosa.load(path, sr=SR, mono=True)
@@ -43,33 +41,38 @@ def predict_clip(file):
     mel = wav_to_logmel(file)
     mel = ((mel - mean) / std)[..., None]
     mel = np.expand_dims(mel, 0)
-    probs = model.predict(mel)[0]
+    probs = model.predict(mel, verbose=0)[0]
     pred_idx = int(np.argmax(probs))
-    return pred_idx, float(probs[pred_idx]), probs
+    return pred_idx, float(probs[pred_idx])
 
 # ------------------ 3. Streamlit UI ------------------
 st.title("🔊 Sound Classifier Using CNN")
-st.write("Upload a `.wav` clip (≤5 s) to see the predicted category")
+st.write("Upload a `.wav` clip (≤5 s) OR record audio to see the predicted category")
 
+# --- Option 1: Upload ---
 uploaded = st.file_uploader("Choose an audio file", type=["wav", "mp3"])
 
-if uploaded:
-    # save to temp so librosa can read
-    with open("temp.wav", "wb") as f:
-        f.write(uploaded.read())
-    
-    # play audio
-    audio_data, samplerate = sf.read("temp.wav")
-    st.audio("temp.wav")
+# --- Option 2: Record ---
+st.write("Or record a new audio:")
+audio = audiorecorder("🎙️ Start Recording", "⏹️ Stop Recording")
 
-    # run prediction
-    pred_idx, conf, probs = predict_clip("temp.wav")
+# Decide which input to use
+if uploaded or (len(audio) > 0):
+    if uploaded:
+        # Save uploaded file
+        with open("temp.wav", "wb") as f:
+            f.write(uploaded.read())
+        file_path = "temp.wav"
+    else:
+        # Save recorded audio
+        file_path = "recorded.wav"
+        audio.export(file_path, format="wav")
+
+    # Play audio
+    st.audio(file_path)
+
+    # Run prediction
+    pred_idx, conf = predict_clip(file_path)
     pred_label = idx_to_label[pred_idx]
 
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
-
-    # show top-5
-    top_idx = probs.argsort()[-5:][::-1]
-    top_labels = [idx_to_label[i] for i in top_idx]
-    top_probs  = [probs[i] for i in top_idx]
-    st.bar_chart(pd.DataFrame({"probability": top_probs}, index=top_labels))
