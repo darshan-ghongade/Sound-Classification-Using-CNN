@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import librosa, soundfile as sf
 import tensorflow as tf
-from audiorecorder import audiorecorder   # pip install streamlit-audiorecorder
+from st_audiorec import st_audiorec
 
 # ------------------ 1. Load model & label map ------------------
 MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
@@ -76,3 +76,4 @@ if uploaded or (len(audio) > 0):
     pred_label = idx_to_label[pred_idx]
 
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
+
