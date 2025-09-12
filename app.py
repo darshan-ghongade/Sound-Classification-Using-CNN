@@ -155,7 +155,8 @@ if uploaded:
 '''
 
 
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # ✅ Disable GPU usage
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -169,7 +170,7 @@ import tempfile
 MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
 LABELMAP_CSV = "label_map.csv"
 
-model = tf.keras.models.load_model(MODEL_PATH)
+model = tf.keras.models.load_model(MODEL_PATH , compile=False, safe_mode=False)
 label_map = pd.read_csv(LABELMAP_CSV)
 idx_to_label = dict(zip(label_map['target'], label_map['category']))
 
@@ -245,6 +246,7 @@ if file_path:
     pred_idx, conf = predict_clip(file_path)
     pred_label = idx_to_label[pred_idx]
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
+
 
 
 
