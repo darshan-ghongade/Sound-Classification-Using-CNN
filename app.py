@@ -9,7 +9,7 @@ import tempfile
 
 
 # ------------------ 1. Load model & label map ------------------
-MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
+MODEL_PATH   = "saved_models/audio_classification_CNN.h5"
 LABELMAP_CSV = "label_map.csv"
 
 model = tf.keras.models.load_model(MODEL_PATH)
@@ -79,5 +79,6 @@ if uploaded or (len(audio) > 0):
     pred_label = idx_to_label[pred_idx]
 
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
+
 
 
