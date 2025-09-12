@@ -161,7 +161,9 @@ import numpy as np
 import pandas as pd
 import librosa, soundfile as sf
 import tensorflow as tf
-from st_audiorec import st_audiorec
+from streamlit_webrtc import webrtc_streamer, WebRtcMode, ClientSettings
+import av
+import tempfile
 
 # ------------------ 1. Load model & label map ------------------
 MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
@@ -171,7 +173,6 @@ model = tf.keras.models.load_model(MODEL_PATH)
 label_map = pd.read_csv(LABELMAP_CSV)
 idx_to_label = dict(zip(label_map['target'], label_map['category']))
 
-# training-time parameters (must match!)
 SR        = 22050
 N_MELS    = 128
 N_FFT     = 1024
@@ -179,7 +180,6 @@ HOP       = 512
 DURATION  = 5.0
 FIX_LEN   = int(DURATION * SR)
 
-# mean & std you computed during training
 mean = np.load("mel_mean.npy")
 std  = np.load("mel_std.npy")
 
@@ -207,33 +207,46 @@ def predict_clip(file):
 st.title("🔊 Sound Classifier Using CNN")
 st.write("Upload a `.wav` clip (≤5 s) OR record audio to see the predicted category")
 
-# --- Option 1: Upload ---
 uploaded = st.file_uploader("Choose an audio file", type=["wav", "mp3"])
 
-# --- Option 2: Record ---
-st.write("Or record a new audio:")
-audio = audiorecorder("🎙️ Start Recording", "⏹️ Stop Recording")
+st.write("Or record new audio (click 'Start'):") 
 
-# Decide which input to use
-if uploaded or (len(audio) > 0):
-    if uploaded:
-        # Save uploaded file
-        with open("temp.wav", "wb") as f:
-            f.write(uploaded.read())
-        file_path = "temp.wav"
-    else:
-        # Save recorded audio
-        file_path = "recorded.wav"
-        audio.export(file_path, format="wav")
+# Temporary file for recording
+temp_audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
 
-    # Play audio
+def recorder_callback(frame):
+    # Convert audio frame to file
+    audio = frame.to_ndarray()
+    sf.write(temp_audio_path, audio[:, 0], frame.sample_rate)
+
+# Create webrtc audio recorder
+webrtc_streamer(
+    key="recorder",
+    mode=WebRtcMode.SENDONLY,
+    audio_receiver_size=1024,
+    client_settings=ClientSettings(
+        media_stream_constraints={"audio": True, "video": False},
+    ),
+    audio_frame_callback=recorder_callback,
+)
+
+# Prediction
+if uploaded:
+    with open("temp.wav", "wb") as f:
+        f.write(uploaded.read())
+    file_path = "temp.wav"
+elif st.button("Use Recorded Audio"):
+    file_path = temp_audio_path
+else:
+    file_path = None
+
+if file_path:
     st.audio(file_path)
-
-    # Run prediction
     pred_idx, conf = predict_clip(file_path)
     pred_label = idx_to_label[pred_idx]
-
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
+
+
 
 
 
