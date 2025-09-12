@@ -9,7 +9,7 @@ import tempfile
 
 
 # ------------------ 1. Load model & label map ------------------
-MODEL_PATH   = "saved_models/audio_classification_CNN.h5"
+MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
 LABELMAP_CSV = "label_map.csv"
 
 model = tf.keras.models.load_model(MODEL_PATH)
