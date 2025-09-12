@@ -1,9 +1,7 @@
-streamlit==1.49.1
+streamlit
+streamlit-webrtc
 tensorflow
-numpy
-pandas
 librosa
 soundfile
-matplotlib
-scikit-learn
-streamlit-webrtc
+numpy
+pandas
