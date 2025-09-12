@@ -6,4 +6,4 @@ librosa
 soundfile
 matplotlib
 scikit-learn
-streamlit-audiorecorder
+st_audiorec
