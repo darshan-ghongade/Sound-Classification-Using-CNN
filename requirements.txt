@@ -1,8 +1,8 @@
 streamlit
-streamlit-webrtc
 tensorflow
 librosa
 soundfile
 numpy
 pandas
-st_audiorec
+streamlit-webrtc
+
