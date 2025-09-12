@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 import librosa, soundfile as sf
 import tensorflow as tf
-from st_audiorec import st_audiorec
+from streamlit_webrtc import webrtc_streamer, WebRtcMode, ClientSettings
+import av
+import tempfile
+
 
 # ------------------ 1. Load model & label map ------------------
 MODEL_PATH   = "saved_models/audio_classification_CNN.keras"
@@ -76,4 +79,5 @@ if uploaded or (len(audio) > 0):
     pred_label = idx_to_label[pred_idx]
 
     st.subheader(f"Prediction: **{pred_label}**  (confidence {conf:.2f})")
+
 
